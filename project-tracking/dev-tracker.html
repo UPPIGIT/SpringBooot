@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Tracker</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include your custom CSS here if needed -->
+    <style>
+        /* Add any custom styles here */
+        body {
+            background-color: #f0f0f0; /* Background color for the entire page */
+        }
+
+        .header {
+            background-color: #007bff; /* Header background color (blue) */
+            color: #ffffff; /* Header text color (white) */
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background-color: #007bff; /* Button background color (blue) */
+            border-color: #007bff; /* Button border color (blue) */
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Button hover background color */
+            border-color: #0056b3; /* Button hover border color */
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Development Tracker</h1>
+    </div>
+
+    <div class="container mt-5">
+        <h2>Your development tasks will be displayed here</h2>
+        
+        <!-- Display a list of development tasks here -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Task ID</th>
+                    <th>Task Name</th>
+                    <th>Developer</th>
+					<th>Application</th>
+					<th>Project</th>
+                    <th>Status</th>
+                    <th>QA Date</th>
+                    <th>Blockers/Issues</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Iterate over development tasks and display them -->
+                <tr th:each="task : ${developmentTasks}">
+                    <td th:text="${task.id}"></td>
+                    <td th:text="${task.taskName}"></td>
+                    <td th:text="${task.developer}"></td>
+					<td th:text="${task.appName}"></td>
+					<td th:text="${task.project}"></td>
+                    <td th:text="${task.status}"></td>
+                    <td th:text="${task.deploymentDate}"></td>
+                    <td th:text="${task.blockersOrIssues}"></td>
+                    <td>
+                        <a th:href="@{'/development/edit/' + ${task.id}}" class="btn btn-primary">Edit</a>
+                        <a th:href="@{'/development/delete/' + ${task.id}}" class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/development/add" class="btn btn-success">Add Task</a>
+		<a href="/development/send-email" class="btn btn-info">Send Development Tasks by Email</a>
+
+    </div>
+
+    <!-- Include Bootstrap JS if needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
