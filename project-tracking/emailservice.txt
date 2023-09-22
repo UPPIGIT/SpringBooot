@@ -178,3 +178,93 @@ public class EmailService {
         return tableHtml.toString();
     }
 }
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.util.List;
+
+@Service
+public class EmailService {
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${email.toEmails}")
+    private List<String> toEmails;
+
+    @Value("${email.ccEmails}")
+    private List<String> ccEmails;
+
+    @Value("${email.statusMessage}")
+    private String statusMessage;
+
+    public void sendDevelopmentTasksByEmail(List<DevelopmentTask> developmentTasks) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+            helper.setSubject("Development Tasks Status");
+
+            // Add recipients (to)
+            helper.setTo(toEmails.toArray(new String[0]));
+
+            // Add CC recipients (cc)
+            helper.setCc(ccEmails.toArray(new String[0]));
+
+            // Create the HTML content with a formatted table and status message
+            String htmlContent = generateTaskStatusTable(developmentTasks, statusMessage);
+            helper.setText(htmlContent, true); // Set the content as HTML
+
+            javaMailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String generateTaskStatusTable(List<DevelopmentTask> developmentTasks, String statusMessage) {
+        StringBuilder tableHtml = new StringBuilder();
+        tableHtml.append("<html><body>");
+
+        // Header Row with Styling
+        tableHtml.append("<table style='border-collapse: collapse; width: 100%;'>");
+        tableHtml.append("<tr style='background-color: #007BFF; color: #ffffff;'>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Task ID</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Task Name</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Developer</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Application</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Project</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Status</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>QA Date</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Blockers/Issues</th>");
+        tableHtml.append("<th style='padding: 10px; border: 1px solid #ffffff;'>Deployment Date</th>");
+        tableHtml.append("</tr>");
+
+        for (DevelopmentTask task : developmentTasks) {
+            tableHtml.append("<tr>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getTaskId()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getTaskName()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getDeveloper()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getApplication()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getProject()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getStatus()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getQaDate()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getBlockersOrIssues()).append("</td>");
+            tableHtml.append("<td style='padding: 10px; border: 1px solid #dddddd;'>").append(task.getDeploymentDate()).append("</td>");
+            tableHtml.append("</tr>");
+        }
+
+        tableHtml.append("</table>");
+
+        // Status Message
+        tableHtml.append("<p>").append(statusMessage).append("</p>");
+
+        tableHtml.append("</body></html>");
+        return tableHtml.toString();
+    }
+}
