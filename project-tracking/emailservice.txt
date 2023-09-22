@@ -1,0 +1,60 @@
+# SMTP server configuration
+spring.mail.host=your-smtp-server.com
+spring.mail.port=587
+spring.mail.username=your-email@example.com
+spring.mail.password=your-email-password
+
+# Additional email settings
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+@Service
+public class EmailService {
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    public void sendDevelopmentTasksByEmail(List<DevelopmentTask> developmentTasks) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setSubject("Development Tasks Status");
+        mailMessage.setTo("recipient@example.com"); // Replace with the recipient's email address
+        mailMessage.setText(generateTaskStatusTable(developmentTasks));
+
+        javaMailSender.send(mailMessage);
+    }
+
+    private String generateTaskStatusTable(List<DevelopmentTask> developmentTasks) {
+        // Generate an HTML table with task status
+        StringBuilder tableHtml = new StringBuilder();
+        tableHtml.append("<table border='1'><tr><th>Task Name</th><th>Status</th></tr>");
+
+        for (DevelopmentTask task : developmentTasks) {
+            tableHtml.append("<tr>");
+            tableHtml.append("<td>").append(task.getTaskName()).append("</td>");
+            tableHtml.append("<td>").append(task.getStatus()).append("</td>");
+            tableHtml.append("</tr>");
+        }
+
+        tableHtml.append("</table>");
+        return tableHtml.toString();
+    }
+}
+
+
+@Controller
+@RequestMapping("/development")
+public class DevelopmentTrackerController {
+    @Autowired
+    private DevelopmentTaskService developmentTaskService;
+    @Autowired
+    private EmailService emailService;
+
+    // ... Other methods ...
+
+    @GetMapping("/send-email")
+    public String sendDevelopmentTasksByEmail(Model model) {
+        List<DevelopmentTask> developmentTasks = developmentTaskService.getAllDevelopmentTasks();
+        emailService.sendDevelopmentTasksByEmail(developmentTasks);
+        return "redirect:/development";
+    }
+}
+

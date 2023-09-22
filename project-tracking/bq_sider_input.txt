@@ -1,0 +1,151 @@
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+options = PipelineOptions()
+
+with beam.Pipeline(options=options) as p:
+    # Read the BigQuery table as the main input source
+    main_input = (
+        p
+        | "Read from BigQuery" >> beam.io.ReadFromBigQuery(
+            query="SELECT * FROM your_project.your_dataset.your_table",
+            use_standard_sql=True,
+        )
+    )
+
+    # Use a ParDo transform to convert each row into a key-value pair
+    def convert_to_kv(row):
+        id_column = row['id_column']
+        values = {k: v for k, v in row.items() if k != 'id_column'}
+        return (id_column, values)
+
+    # Apply the ParDo transform
+    key_values = main_input | "Convert to Key-Value" >> beam.Map(convert_to_kv)
+
+    # Create another PCollection as your main data source
+    # For example, you can read another BigQuery table
+    other_input = (
+        p
+        | "Read another BigQuery table" >> beam.io.ReadFromBigQuery(
+            query="SELECT * FROM your_project.your_dataset.another_table",
+            use_standard_sql=True,
+        )
+    )
+
+    # Define a ParDo transform that uses 'key_values' as a side input
+    class ProcessElementsWithSideInput(beam.DoFn):
+        def process(self, element, side_input_dict):
+            # Access 'key_values' as a side input
+            key_values = side_input_dict['key_values']
+            # Access the corresponding values for the element's key
+            values = key_values.get(element['id_column'], {})
+            
+            # Perform your processing logic using 'values' and 'element'
+            # ...
+
+            # Yield the processed element or any other output
+            yield processed_element
+
+    # Use beam.Map to apply the ParDo transform with 'key_values' as a side input
+    processed_data = (
+        other_input
+        | "Process Main Data with Side Input" >> beam.Map(
+            ProcessElementsWithSideInput(), side_input=beam.pvalue.AsDict(key_values)
+        )
+    )
+
+
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+options = PipelineOptions()
+
+with beam.Pipeline(options=options) as p:
+    # Read the BigQuery table as the main input source
+    main_input = (
+        p
+        | "Read from BigQuery" >> beam.io.ReadFromBigQuery(
+            query="SELECT * FROM your_project.your_dataset.your_table",
+            use_standard_sql=True,
+        )
+    )
+
+    # Use a ParDo transform to convert each row into a key-value pair
+    def convert_to_kv(row):
+        id_column = row['id_column']
+        values = {k: v for k, v in row.items() if k != 'id_column'}
+        return (id_column, values)
+
+    # Apply the ParDo transform
+    key_values = main_input | "Convert to Key-Value" >> beam.Map(convert_to_kv)
+
+    # Create another PCollection that needs 'key_values' as a side input
+    other_collection = (
+        # Your other transformations here...
+        # For example, another ReadFromBigQuery or other processing steps...
+    )
+
+    # Define a ParDo that uses 'key_values' as a side input
+    class ProcessWithSideInput(beam.DoFn):
+        def process(self, element, side_input_dict):
+            key = element['some_key']  # Replace 'some_key' with the actual key you want to use
+            values = side_input_dict.get(key, {})  # Retrieve the values from the side input
+            # Your processing logic here
+            yield processed_element
+
+    # Apply the ParDo with side input
+    processed_data_with_side_input = (
+        other_collection
+        | "Process with Side Input" >> beam.ParDo(ProcessWithSideInput(), beam.pvalue.AsDict(key_values))
+    )
+
+
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+options = PipelineOptions()
+
+with beam.Pipeline(options=options) as p:
+    # Read the first BigQuery table as the main input source
+    main_input1 = (
+        p
+        | "Read from BigQuery" >> beam.io.ReadFromBigQuery(
+            query="SELECT * FROM your_project.your_dataset.your_table",
+            use_standard_sql=True,
+        )
+    )
+
+    # Use a ParDo transform to convert each row into a key-value pair
+    def convert_to_kv(row):
+        id_column = row['id_column']
+        values = {k: v for k, v in row.items() if k != 'id_column'}
+        return (id_column, values)
+
+    # Apply the ParDo transform
+    key_values = main_input1 | "Convert to Key-Value" >> beam.Map(convert_to_kv)
+
+    # Read the second BigQuery table as the second main input source
+    main_input2 = (
+        p
+        | "Read from Another BigQuery" >> beam.io.ReadFromBigQuery(
+            query="SELECT * FROM your_project.your_dataset.your_other_table",
+            use_standard_sql=True,
+        )
+    )
+
+    # Use a ParDo transform for processing main_input2 with key_values as side input
+    def process_main_element2(element, side_input_dict):
+        # Access the side input dictionary and process the main element
+        id_column_value = element['id_column']
+        values_from_side_input = side_input_dict.get(id_column_value, {})
+        # Your processing logic here
+        # Combine data from main_input2 and values_from_side_input as needed
+        yield processed_element
+
+    processed_data = (
+        main_input2
+        | "Process Main Data2 with Side Input" >> beam.ParDo(
+            process_main_element2,
+            beam.pvalue.AsDict(key_values),  # Convert key_values to a side input dictionary
+        )
+    )
