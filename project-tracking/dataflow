@@ -1,0 +1,144 @@
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+# Function to extract data from table2 and convert it to a dictionary
+def extract_table2_data(row):
+    return ((row['a'], row['b']), {'c': row['c'], 'd': row['d'], 'e': row['e']})
+
+# ParDo transform to create 'c', 'd', and 'e' arrays for each element in 'a' and 'b' arrays
+class CreateArrays(beam.DoFn):
+    def process(self, element, table2_data):
+        t1_a, t1_b = element['a'], element['b']
+        c_arrays, d_arrays, e_arrays = [], [], []
+        for a_val, b_val in zip(t1_a, t1_b):
+            matching_data = table2_data.get((a_val, b_val), {})
+            c_arrays.append(matching_data.get('c', []))
+            d_arrays.append(matching_data.get('d', []))
+            e_arrays.append(matching_data.get('e', []))
+        yield {
+            't1_a': t1_a,
+            't1_b': t1_b,
+            'c_array': c_arrays,
+            'd_array': d_arrays,
+            'e_array': e_arrays
+        }
+
+# Replace these with your GCP project and bucket information
+project_id = 'your-project-id'
+input_table1 = 'your-project-id:your-dataset.table1'
+input_table2 = 'your-project-id:your-dataset.table2'
+output_bucket = 'gs://your-bucket/output'
+
+options = PipelineOptions([
+    '--runner=DataflowRunner',
+    '--project=' + project_id,
+    '--staging_location=' + output_bucket + '/staging',
+    '--temp_location=' + output_bucket + '/temp',
+    '--job_name=my-dataflow-job',
+    '--region=us-central1',  # Change to your desired region
+    '--save_main_session=True'
+])
+
+with beam.Pipeline(options=options) as p:
+    # Read table2 and convert it to a PCollection
+    table2_data = (
+        p
+        | 'ReadTable2' >> beam.io.Read(beam.io.BigQuerySource(query=f'SELECT * FROM {input_table2}'))
+        | 'ExtractTable2' >> beam.Map(extract_table2_data)
+        | 'AsDict' >> beam.combiners.ToDict()
+    )
+
+    # Read table1, iterate through elements in 'a' and 'b' arrays, and create 'c', 'd', and 'e' arrays
+    table1_data = (
+        p
+        | 'ReadTable1' >> beam.io.Read(beam.io.BigQuerySource(query=f'SELECT * FROM {input_table1}'))
+        | 'IterateArrays' >> beam.ParDo(CreateArrays(), beam.pvalue.AsDict(table2_data))
+    )
+
+    # Process the combined data from table1 and table2 as needed
+    # ...
+
+# Execute the pipeline
+
+
+
+import pandas as pd
+
+# Assuming you have a DataFrame named 'df' with a 'prod_cd' column
+df['service_type'] = df['prod_cd'].apply(lambda x: 'Commercial' if any(code in x for code in ['NAMN', 'NATP', 'NEDS']) else ('Medicare' if any(code in x for code in ['P1', 'P2', 'CP']) else 'Other'))
+
+# 'service_type' column now contains 'Commercial' for NAMN, NATP, or NEDS,
+# 'Medicare' for P1, P2, or CP, and 'Other' for other values in 'prod_cd'
+
+import numpy as np
+
+# Example 'service_type' array with duplicates
+service_type = np.array(['Commercial', 'Medicare', 'Commercial', 'Other', 'Medicare', 'Other'])
+
+# Remove duplicates and get unique values
+unique_service_types = np.unique(service_type)
+
+# 'unique_service_types' now contains unique values from the 'service_type' array
+print(unique_service_types)
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+# Function to extract data from table2 and convert it to a dictionary
+def extract_table2_data(row):
+    return ((row['a'], row['b']), {'c': row['c'], 'd': row['d'], 'e': row['e']})
+
+# ParDo transform to create 'c', 'd', and 'e' arrays for each element in 'a' and 'b' arrays
+class CreateArrays(beam.DoFn):
+    def process(self, element, table2_data):
+        t1_a, t1_b = element['a'], element['b']
+        c_arrays, d_arrays, e_arrays = [], [], []
+        for a_val, b_val in zip(t1_a, t1_b):
+            matching_data = table2_data.get((a_val, b_val), {})
+            c_arrays.append(matching_data.get('c', []))
+            d_arrays.append(matching_data.get('d', []))
+            e_arrays.append(matching_data.get('e', []))
+        yield {
+            't1_a': t1_a,
+            't1_b': t1_b,
+            'c_array': c_arrays,
+            'd_array': d_arrays,
+            'e_array': e_arrays
+        }
+
+# Replace these with your GCP project and bucket information
+project_id = 'your-project-id'
+input_table1 = 'your-project-id:your-dataset.table1'
+input_table2 = 'your-project-id:your-dataset.table2'
+output_bucket = 'gs://your-bucket/output'
+
+options = PipelineOptions([
+    '--runner=DataflowRunner',
+    '--project=' + project_id,
+    '--staging_location=' + output_bucket + '/staging',
+    '--temp_location=' + output_bucket + '/temp',
+    '--job_name=my-dataflow-job',
+    '--region=us-central1',  # Change to your desired region
+    '--save_main_session=True'
+])
+
+with beam.Pipeline(options=options) as p:
+    # Read table2 and convert it to a PCollection
+    table2_data = (
+        p
+        | 'ReadTable2' >> beam.io.Read(beam.io.BigQuerySource(query=f'SELECT * FROM {input_table2}'))
+        | 'ExtractTable2' >> beam.Map(extract_table2_data)
+        | 'AsDict' >> beam.combiners.ToDict()
+    )
+
+    # Read table1, iterate through elements in 'a' and 'b' arrays, and create 'c', 'd', and 'e' arrays
+    table1_data = (
+        p
+        | 'ReadTable1' >> beam.io.Read(beam.io.BigQuerySource(query=f'SELECT * FROM {input_table1}'))
+        | 'IterateArrays' >> beam.ParDo(CreateArrays(), beam.pvalue.AsDict(table2_data))
+    )
+
+    # Process the combined data from table1 and table2 as needed
+    # ...
+
+# Execute the pipeline
+
